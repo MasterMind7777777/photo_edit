@@ -51,7 +51,7 @@ class ImageProcessor:
         arrow_tip_size = int(1 * square_size) + int(area / 500000)
 
         # Create an empty canvas to draw the arrows and squares
-        canvas = np.copy(image)
+        canvas = image.astype(np.uint8)
 
         # Draw the arrow in the middle of the first column pointing up
         cv2.arrowedLine(
@@ -84,7 +84,7 @@ class ImageProcessor:
 
         # Save the image with arrows and squares
         if output_path != "":
-            cv2.imwrite(output_path, canvas)
+            cv2.imwrite(output_path, canvas, [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
         # Return the calculated values
         return square_size, first_column_center, arrow_tip_size
@@ -128,7 +128,7 @@ class ImageProcessor:
             cv2.putText(image, text, (text_x, text_y), font, font_scale, (0, 0, 0), font_thickness)
 
             # Save the updated image
-            cv2.imwrite(image_path, image)
+            cv2.imwrite(image_path, image, [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
 
 
