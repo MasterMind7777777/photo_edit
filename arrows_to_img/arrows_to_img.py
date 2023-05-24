@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os
+import pandas as pd
 
 class ImageProcessor:
     def __init__(self, input_folder, output_folder):
@@ -10,15 +11,19 @@ class ImageProcessor:
     def process_folder(self):
         # Get the list of files in the input folder
         file_list = os.listdir(self.input_folder)
+        print(file_list)
 
         # Process each file in the folder
         for file_name in file_list:
+            
             # Construct the input and output paths
             input_path = os.path.join(self.input_folder, file_name)
-            output_path = os.path.join(self.output_folder, file_name)
-
+            output_path = os.path.join(self.output_folder)
+            print(file_name)
+            print(output_path + file_name)
             # Process the image file
-            self.draw_matrix_arrows(input_path, output_path)
+            self.draw_matrix_arrows(input_path, output_path + "/" + file_name)
+            self.add_numbers_from_excel(output_path + "/" + file_name, file_name)
 
     def draw_matrix_arrows(self, image_path, output_path):
         # Load the image
@@ -78,7 +83,53 @@ class ImageProcessor:
                 )
 
         # Save the image with arrows and squares
-        cv2.imwrite(output_path, canvas)
+        if output_path != "":
+            cv2.imwrite(output_path, canvas)
+
+        # Return the calculated values
+        return square_size, first_column_center, arrow_tip_size
+
+
+    def add_numbers_from_excel(self, image_path, file_name):
+        # Load the Excel file
+        excel_file = pd.read_excel("test.xlsx")
+        print(excel_file)
+
+        # Find the corresponding number for the given file name
+        number = excel_file.loc[excel_file['Filename'] == file_name, 'Number'].values
+
+        if len(number) > 0:
+            number = int(number[0])
+
+            # Load the image
+            image = cv2.imread(image_path)
+
+            # Get the dimensions of the image
+            height, width, _ = image.shape
+
+            # Set the font properties
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1
+            font_thickness = 2
+
+            # Determine the position to place the number
+            text = str(number)
+            text_width, text_height = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+
+            # Calculate the position next to the arrow tip
+            square_size, first_column_center, arrow_tip_size = self.draw_matrix_arrows(image_path, "")
+
+            arrow_tip_x = square_size + int(0.5 * square_size)
+            arrow_tip_y = first_column_center
+            text_x = arrow_tip_x + arrow_tip_size
+            text_y = arrow_tip_y + arrow_tip_size + text_height
+
+            # Add the number to the image
+            cv2.putText(image, text, (text_x, text_y), font, font_scale, (0, 0, 0), font_thickness)
+
+            # Save the updated image
+            cv2.imwrite(image_path, image)
+
 
 
 # Example usage
